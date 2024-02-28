@@ -1,47 +1,55 @@
-import React, { useEffect, useState } from "react";
-import { Button, ScrollView, Text, View } from "react-native";
-import Character from "../entities/Character";
-import { fetchCharacters } from "../useCases/fetchCharacters";
-import { CharacterListItem } from "./CharacterListItem";
+import React from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import Character from '../entities/Character';
+import {CharacterListItem} from './CharacterListItem';
+import {useCharacters} from '../core/useCharacters';
 
 const CharacterList = () => {
-    const [characters, setCharacters] = useState<Character[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
+  const {characters, loading, nextPage} = useCharacters();
 
-    const fetchData = async (page: number) => {
-        try {
-            const characterData = await fetchCharacters(page);
-            console.log("Character data:", characterData)
-            setCharacters(characterData)
-        } catch (error) {
-            console.error('Error fetching character data:', error);
-        }
-    }
+  const renderItem = (item: Character) => (
+    <CharacterListItem
+      id={item.id}
+      name={item.name}
+      gender={item.gender}
+      image={item.image}
+      species={item.species}
+    />
+  );
 
-    useEffect(() => {
-        fetchData(currentPage);
-    }, [currentPage]);
+  const renderSeparator = () => <View style={styles.separator} />;
 
-    const handleNextPage = () => {
-        setCurrentPage(currentPage + 1);
-    }
+  return (
+    <FlatList
+      data={characters}
+      renderItem={({item}) => renderItem(item)}
+      onEndReached={nextPage}
+      onEndReachedThreshold={0.1}
+      ListFooterComponent={() => (
+        <View
+          style={styles.footer}
+          {...(loading && <ActivityIndicator />)}
+          {...(!loading && <Text>No more characters to load</Text>)}></View>
+      )}
+      ItemSeparatorComponent={renderSeparator}
+    />
+  );
+};
 
-    const handlePreviousPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    };
-
-    return (
-        <ScrollView>
-          {characters.map((character: Character) => (
-            <CharacterListItem id={character.id} name={character.name} species={character.species} type={character.type} gender={character.gender} url={character.url} created={character.created} image={character.image} ></CharacterListItem>
-          ))}
-          <Button onPress={handlePreviousPage} title="Previous Page" />
-          <Button onPress={handleNextPage} title="Next Page" />
-        </ScrollView>
-    );
-}
+const styles = StyleSheet.create({
+  separator: {
+    height: 1,
+    backgroundColor: '#cccccc',
+  },
+  footer: {
+    paddingVertical: 20,
+  },
+});
 
 export default CharacterList;
-

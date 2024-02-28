@@ -17,7 +17,6 @@ export const fetchCharacters = async (page: number) => {
             )
         })
     } catch (error) {
-        console.error('Error fetching and mapping character data:', error);
-        throw error;
+        return [];
     }
 }
